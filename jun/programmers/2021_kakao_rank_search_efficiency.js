@@ -48,17 +48,16 @@ L.prepend = curry(function* (val, iter) {
 
 const binarySearchLowerBound = curry((target, arr) => {
   if (!arr) return 0
-  let left = 0
-  let right = arr.length - 1
+  let min = 0
+  let max = arr.length - 1
 
-  let mid
-  while (left < right) {
-    mid = Math.floor((left + right) / 2)
-    if (target <= arr[mid]) right = mid
-    if (arr[mid] < target) left = mid + 1
+  while (min <= max) {
+    const mid = Math.floor((min + max) / 2)
+    if (target <= arr[mid]) max = mid - 1
+    if (arr[mid] < target) min = mid + 1
   }
 
-  if (arr[left] >= target) return arr.length - left
+  if (arr[min] >= target) return arr.length - min
   return 0
 })
 
