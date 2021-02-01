@@ -1,5 +1,3 @@
-
-
 const isPossible = (friends, stones, k) => {
   let count = 0;
   for(let i = 0; i < k; i++){
