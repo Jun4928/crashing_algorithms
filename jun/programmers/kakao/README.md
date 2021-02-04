@@ -1,4 +1,4 @@
-# Programmers
+# KAKAO 문제풀이
 
 ## 2021 Kakao 신규 아이디 추천
 
@@ -340,4 +340,39 @@ fares.forEach(([point1, point2, fare]) => {
   graph[point1 - 1][point2 - 1] = fare
   graph[point2 - 1][point1 - 1] = fare
 }
+```
+
+## 2018 Kakao 프렌즈4블록
+
+- 주어진 문제의 요구사항을 해결하는 문제
+- 처음 인자로 들어온 board 배열을 2차원 배열로 뒤집어 만들기
+- 특정한 알고리즘은 없지만 2차원 배열을 다루는데 있어서 시간을 줄여야 함
+- 2X2 마스크를 만들어서, 갱신되는 2차원 배열에 대해서 지울 것이 있는지, 없는지 확인한다.
+
+### 기록하고 싶은 코드
+
+> 들어온 board 배열을 2차원 배열로 뒤집어서 만들기
+
+```js
+let stacks = [...new Array(n)].map((_, row) =>
+  [...new Array(m)].map((_, column) => board[column][row]).reverse()
+)
+```
+
+> 2차원 배열의 요소가 모두 같은지 확인하는 함수
+
+```js
+const isAllSame = ([first, second]) => first.every((a) => a && second.every((b) => a === b))
+```
+
+> 삭제된 배열에 대해서 끝까지 undefined 를 채우는 함수
+
+```js
+const fillLast = (arr, length) => [...new Array(length)].map((_, idx) => arr[idx])
+```
+
+> 2차원 배열과 똑같은 배열을 만들어서 지워지는 요소에 대한 부울린을 저장하는 코드
+
+```js
+let deletedBoard = [...new Array(n).fill(true)].map((_) => new Array(m).fill(true))
 ```
