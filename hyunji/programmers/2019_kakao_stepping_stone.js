@@ -15,7 +15,7 @@ const isPossible = (friends, stones, k) => {
 function solution(stones, k) {
   let answer = 0;
   let s = 0, e = 0, mid; // 왜 e = Math.max(...stones)를 쓰면 안되는 걸까..?
-  for(let i = 0; i < stones.length; i++){
+for(let i = 0; i < stones.length; i++){
     if(e < stones[i]) e = stones[i];
   }
   while(s <= e){
