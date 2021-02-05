@@ -38,7 +38,7 @@ const powerSet = (numbers) => {
 
 - BFS
 
-### Breadth First Search
+### 기록하고 싶은 코드
 
 - BFS 로 탐색 하기 위해서는 먼저 배열로 들어온 데이터를 객체로 만든다.
 - 네트워크의 개수를 구해야 하므로 graph 의 모든 키 값에 대해서 BFS 알고리즘을 적용한다.
@@ -106,3 +106,127 @@ const BFS = (key, visitied) => {
 - 방문하지 않은 노드가 남아 있을 때 까지 반복한다.
 - 방문 할 때, 이미 방문되어 있다면 continue 로 아래 로직이 실행되지 않게 하고
 - 방문하지 않았다면, visitied 배열의 key 값을 true로 바꾸어주고, 연결된 모든 노드들을 unvisited 에 enqueue 한다.
+
+## 단어 변환
+
+- BFS 로 최단거리 찾기 문제
+- 각 단어가 Key 라고 생각하고 이동할 수 있는 단어들을 연결 해 주는 로직이 필요함
+
+### 기록하고 싶은 코드
+
+> 인자로 들어온 변형 할 단어와 변형 가능한 단어가 나열되어 있는 words 배열을 graph 로 만드는 로직
+
+```js
+const graph = {}
+const graphKeys = [begin, ...words]
+
+const isOneDiffer = (key, el) => {
+  // 한 자리수만 다르면 true 를 반환하도록 한다.
+  let sameCount = 0
+  const keyArr = [...key]
+  keyArr.forEach((char, idx) => {
+    sameCount += char === el[idx] ? 1 : 0
+  })
+
+  return sameCount >= key.length - 1
+}
+
+for (const key of graphKeys) {
+  const connected = graphKeys.filter((el) => el !== key && isOneDiffer(key, el)) // 자기 자신이 아니며, 한 글자만 다른 것들을 배열에 담는다. (변형 될 수 있는 단어를 의미한다)
+  graph[key] = connected // 변형될 수 있는 단어를 담은 배열을 value 로 해당 단어에 맵핑한다.
+}
+```
+
+> 최단 거리를 찾는 Breadth First Search
+
+```js
+const visited = {}
+const unvisitied = [{ key: begin, distance: 0 }]
+
+let shortestDistance
+while (unvisitied.length) {
+  const { key, distance } = unvisitied.shift()
+
+  if (visited[key]) continue
+  if (key === target) {
+    shortestDistance = distance
+    break
+  }
+
+  visited[key] = true
+
+  const connected = graph[key].map((key) => ({ key, distance: distance + 1 }))
+  unvisitied.push(...connected)
+}
+```
+
+- 변형 된 횟수를 저장하기 위해서 unvisited queue 에 탐색 할 노드를 담을 때, 객체로 distance 를 함께 enqueue 한다.
+- queue 에서 dequeue 를 통해 BFS를 진행한다.
+- target 을 가장 먼저 만나는 순간이 가장 짧은 순간이므로 그 때의 distance 를 담고 BFS를 종료한다.
+- 미리 방문 헀으면 conitnue 로 탐색이 진행되지 않도록 한다.
+- unvisited 에 연결되어 있는 단어들을 넣을 때, 현재 distance에 +1 을 해서 객체의 형태로 담아준다.
+
+## 여행경로
+
+- DFS(깊이 우선 탐색) 알고리즘으로 항공권을 사용할 수 있는 경로를 탐색한다.
+
+### 기록하고 싶은 코드
+
+> 배열로 들어온 티켓에 대해, graph로 관계성을 만들어내는 코드
+
+```js
+const solution = (tickets) => {
+  const graph = {}
+
+  for (const [city, arrive] of tickets) {
+    const connected = graph[city] || []
+    graph[city] = [...connected, arrive]
+  }
+
+  for (const city in graph) {
+    const connected = graph[city]
+    graph[city] = connected.sort()
+    // 알파벳 순이기 때문에 먼저 정렬 해 놓는다.
+  }
+
+  return getAvailablePath({ ...graph })
+}
+```
+
+> 티켓을 전부 사용해서 여행할 수 있는 경로를 구하는 함수
+
+```js
+const getAvailablePath = (graph) => {
+  let found = undefined
+
+  const DFS = (city, path) => {
+    if (found) return
+
+    const connected = graph[city]
+    if (!connected || !connected.length) {
+      // 연결된 도시가 없거나, 더 이상 갈 곳이 없다면 재귀 종료 조건
+      const isAllTicketUsed = Object.values(graph).every(({ length }) => !length) // graph 로 연결된 모든 도시 들이 방문 되었다면 모든 티켓을 다 사용한 것
+
+      if (isAllTicketUsed) {
+        // 이 때, 모든 티켓이 다 사용되었는지 체크해서 맞으면, 티켓을 전부 사용해서 갈 수 있는 여행경로가 됨
+        found = path
+        return
+      }
+
+      return
+    }
+
+    for (const [idx, arrive] of connected.entries()) {
+      graph[city] = connected.filter((_, cityIndex) => cityIndex !== idx) // 상태를 바꾸고
+      DFS(arrive, [...path, arrive]) // DFS 재귀 호출
+      graph[city] = connected // 콜 스택이 끝나고 다음 요소에 대해서 DFS를 탐색 할 때, 다시금 원본 상태로 돌려 놓아야 함
+    }
+  }
+
+  DFS('ICN', ['ICN']) // 문제의 요구사항에 무조건 ICN 출발이기 때문에 초기 값을 ICN 으로 한다.
+  return found
+}
+```
+
+- 이 DFS를 구현 하면서 애를 먹었던 부분은 DFS 함수를 호출하고 원래의 상태로 되돌리는 코드가 없을 때, 원했던 결과를 얻을 수 없었다.
+- for 문에서, 갈 수 있는 모든 도시를 방문하기 위해서 도착 도시에 대해서 다시금 DFS 함수를 재귀호출 하고 있는데, 호출이 끝나고 나서 `graph[city] = connected` 원본 배열로 되돌려야 그 다음 재귀 호출에서 유효한 값을 얻어낼 수 있다.
