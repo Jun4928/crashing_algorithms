@@ -230,3 +230,28 @@ const getAvailablePath = (graph) => {
 
 - 이 DFS를 구현 하면서 애를 먹었던 부분은 DFS 함수를 호출하고 원래의 상태로 되돌리는 코드가 없을 때, 원했던 결과를 얻을 수 없었다.
 - for 문에서, 갈 수 있는 모든 도시를 방문하기 위해서 도착 도시에 대해서 다시금 DFS 함수를 재귀호출 하고 있는데, 호출이 끝나고 나서 `graph[city] = connected` 원본 배열로 되돌려야 그 다음 재귀 호출에서 유효한 값을 얻어낼 수 있다.
+
+## 배달
+
+- 플로이드-워셜(Floyd-Warhsall) 알고리즘
+
+### 기록하고 싶은 코드
+
+```js
+roads.forEach(([col, row, distance]) => {
+  const current = graph[col - 1][row - 1]
+  graph[col - 1][row - 1] = Math.min(current, distance) // 애초에 최소값을 저장한다.
+  graph[row - 1][col - 1] = Math.min(current, distance)
+})
+
+for (let mid = 0; mid < N; mid++) {
+  // 모든 노드를 중간노드로 하기 위해서 3차원 for 문이 필요하다.
+  for (let col = 0; col < N; col++) {
+    for (let row = 0; row < N; row++) {
+      graph[col][row] = Math.min(graph[col][row], graph[col][mid] + graph[mid][row])
+      // 계속해서 최소값을 갱신해 나간다.
+      // 본래 저장되어 있는 거리와, 중간 지점을 거친 거리를 비교해서 최소값을 갱신하는 알고리즘이다.
+    }
+  }
+}
+```
