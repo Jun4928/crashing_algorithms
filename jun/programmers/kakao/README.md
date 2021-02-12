@@ -376,3 +376,49 @@ const fillLast = (arr, length) => [...new Array(length)].map((_, idx) => arr[idx
 ```js
 let deletedBoard = [...new Array(n).fill(true)].map((_) => new Array(m).fill(true))
 ```
+
+## Kakao 2020 인턴쉽 보석 쇼핑
+
+- 처음에 sliding window 로 접근 했으나, 검사하는 window 사이즈가 계속해서 변경되기 때문에 어려움을 겪었음
+- two pointer 전략으로, left, right 의 구간을 변경하면서 조건을 만족하는 구간을 찾아야 한다.
+- 성능을 위해 JavaScript 의 Object 가 아닌, Map 자료구조를 사용해야 한다.
+
+### Two pointer
+
+> two pointer 를 사용한 핵심 로직
+
+```js
+const gemsSet = new Set(gems)
+const gemsCount = gemsSet.size
+const gemsLength = gems.length
+let left = 0
+let right = 0
+let answer = [0, gemsLength - 1]
+
+const gemHash = new Map()
+gemHash.set(gems[right], 1)
+
+while (right < gemsLength && left <= right) {
+  const isAllIncluded = gemHash.size === gemsCount
+
+  if (isAllIncluded) {
+    const leftGemCount = gemHash.get(gems[left]) - 1
+    leftGemCount !== 0 ? gemHash.set(gems[left], leftGemCount) : gemHash.delete(gems[left])
+
+    if (right - left < answer[1] - answer[0]) answer = [left, right]
+    left += 1
+  } else {
+    right += 1
+    const rightGemCount = gemHash.get(gems[right])
+    gemHash.set(gems[right], rightGemCount ? rightGemCount + 1 : 1)
+  }
+}
+
+return answer.map((el) => el + 1)
+```
+
+- while(right 포인터가 보석배열의 끝에 다다랐을 때, 그리고 left 포인터와 right 포인터가 같아지는 지점까지) 다음 로직을 반복한다.
+
+1. 현재 구간에 모든 보석이 들어있는지 검사한다.
+2. 모든 보석이 들어있다면 left 포인터를 하나 증가 시킨다. 이 때, left 포인터에 있는 보석을 Map 에서 하나만큼 감소 시키거나 0 이 되면 완전히 삭제한다.
+3. 모든 보석이 들어있지 않다면, right 포인터를 하나 증가시키고, 이 포인터에 담긴 보석의 개수를 Map 에 증가 시킨다.
