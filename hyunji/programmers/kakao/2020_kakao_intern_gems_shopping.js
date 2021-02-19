@@ -35,7 +35,7 @@ function solution(gems) {
     mid = Math.floor((s + e) / 2);
     const indexes = isValid(mid, gems, { ...jewels }, jewelCount);
     if (indexes) {
-      answer = [...indexes];
+      answer = indexes;
       e = mid - 1;
     } else s = mid + 1;
   }
