@@ -1,78 +1,81 @@
 const log = console.log
 
-const L = {}
+const solution = (info, query) => {
+  const scoreTable = new Map()
 
-const curry = (f) => (first, ...args) =>
-  args.length ? f(first, ...args) : (...args) => f(first, ...args)
+  // get possible options and map score to each option so that each possible option can be quired
+  info.forEach((i) => {
+    const splitInfo = i.split(' ')
+    const score = splitInfo.pop()
+    const options = getPossibleOptions(splitInfo)
 
-const reduce = curry((f, acc, iter) => {
-  if (!iter) {
-    iter = acc[Symbol.iterator]()
-    acc = iter.next().value
-  } else {
-    iter = iter[Symbol.iterator]()
-  }
+    options.forEach((option) => {
+      const current = scoreTable.get(option) || []
+      current.push(Number(score))
+      scoreTable.set(option, current)
+    })
+  })
 
-  for (const el of iter) acc = f(acc, el)
-  return acc
-})
-
-const go = (value, ...functions) => reduce((acc, fn) => fn(acc), value, functions)
-const pipe = (fn, ...functions) => (...values) => go(fn(...values), ...functions)
-
-L.map = curry(function* (f, iter) {
-  for (const el of iter) yield f(el)
-})
-
-L.filter = curry(function* (f, iter) {
-  for (const el of iter) if (f(el)) yield el
-})
-
-const take = curry((limit, iter) => {
-  const res = []
-
-  for (const el of iter) {
-    res.push(el)
-    if (res.length === limit) return res
-  }
-
-  return res
-})
-
-const takeAll = take(Infinity)
-const map = curry(pipe(L.map, takeAll))
-const filter = curry(pipe(L.filter, takeAll))
-const flat = pipe(L.flat, takeAll)
-
-const split = curry((seperator, str) => str.split(seperator))
-const getLength = (iter) => iter.length
-const divideLast = (arr) => [arr.slice(0, arr.length - 1), Number(arr[arr.length - 1])]
-
-const trace = curry((label, value) => {
-  log(`${label}:: ${value}`)
-  return value
-})
-
-const solution = (info, quries) =>
-  go(
-    quries,
-    L.map(split(' ')),
-    L.map(divideLast),
-    map(([query, criteria]) =>
-      go(
-        info,
-        L.map(split(' ')),
-        L.map(divideLast),
-        L.filter(([info, score]) => score >= criteria),
-        L.filter(([info, score]) => query[0] === '-' || info[0] === query[0]),
-        L.filter(([info, score]) => query[2] === '-' || info[1] === query[2]),
-        L.filter(([info, score]) => query[4] === '-' || info[2] === query[4]),
-        L.filter(([info, score]) => query[6] === '-' || info[3] === query[6]),
-        takeAll,
-        getLength
-      )
+  // sort in ascending
+  for (const [key, scores] of scoreTable) {
+    scoreTable.set(
+      key,
+      scores.sort((a, b) => a - b)
     )
-  )
+  }
+
+  return query
+    .map((q) => {
+      const queryWithoutAnd = q.replace(/and/gi, '').split(' ')
+      const criteria = queryWithoutAnd.pop()
+      const key = queryWithoutAnd.join('')
+      return [key, criteria]
+    })
+    .map(([key, criteria]) => getAvailableCandidates(scoreTable.get(key), Number(criteria)))
+}
+
+// info: string (ex. 'java backend junior pizza 150')
+// 4 => 16 different options
+const getPossibleOptions = (info) => {
+  const infoLength = info.length
+  let flags = new Array(infoLength).fill(false)
+  const options = []
+
+  const PowerSet = (level) => {
+    if (level === infoLength) {
+      const option = flags.map((flag, idx) => (flag ? info[idx] : '-')).join('')
+      options.push(option)
+
+      return
+    }
+
+    flags[level] = false
+    PowerSet(level + 1)
+
+    flags[level] = true
+    PowerSet(level + 1)
+  }
+
+  PowerSet(0)
+  return options
+}
+
+// Binary Search with minimum
+// scores: number[]
+// criteria: number
+const getAvailableCandidates = (scores, criteria) => {
+  if (!scores) return 0
+  let [left, right] = [0, scores.length - 1]
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+
+    if (scores[mid] < criteria) left = mid + 1
+    if (scores[mid] >= criteria) right = mid - 1
+  }
+
+  return scores.length - left
+}
 
 log(
   solution(
@@ -93,4 +96,4 @@ log(
       '- and - and - and - 150',
     ]
   )
-) // [1, 1, 1, 1, 2, 4]
+)
