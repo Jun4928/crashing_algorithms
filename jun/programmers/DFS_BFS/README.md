@@ -259,3 +259,59 @@ for (let mid = 0; mid < N; mid++) {
 ## 순위
 
 - DFS
+- 양방향으로 서로 다른 weight(1, -1) 를 가지도록 하는 graph 를 배열로 만들어야 함
+- 부모 + 자식 노드 개수 === n - 1 인 노드가 몇개인지 구하는 문제
+- 문제의 요구사항에서 실력이 좋다면 항상 이긴다고 했으니, 경기 결과를 통해서 -> 반대로 나의 부모를 이긴 부모는 나를 항상 이길 것이고, 나에게 진 자식의 자식들은 나에게 지기 때문에 위와 같은 조건이 성립하게 된다.
+
+### 기록하고 싶은 코드
+
+> 배열로 노드간에 관계도를 구성하는 코드
+
+```js
+let graph = [...new Array(n)].map((_) => new Array(n).fill(0))
+
+for (const [winner, loser] of results) {
+  graph[winner - 1][loser - 1] = 1
+  graph[loser - 1][winner - 1] = -1
+}
+```
+
+```js
+const people = [...new Array(n)].map((_, idx) => idx)
+// 사람을 노드로 담고
+
+// 부모 자식이 몇개가 되는지 map 함수로 구하고
+// filter 로 정답이 되는 조건(부모 노드 + 자식 노드 === n - 1)을 걸러낸다
+return people
+  .map(
+    (person) =>
+      getParentsAndChildren(person, 1, graph, n) + getParentsAndChildren(person, -1, graph, n)
+  )
+  .filter((v) => v === n - 1).length
+```
+
+> flag(1 | -1)를 인자로 주어서 부모 또는 자식이 몇개가 되는지 찾아내는 함수
+
+```js
+const getParentsAndChildren = (person, flag, graph, n) => {
+  let related = 0
+  let visited = new Array(n).fill(false)
+
+  const DFS = (person, flag) => {
+    const connected = graph[person]
+
+    for (let i = 0; i < connected.length; i++) {
+      if (connected[i] === flag && !visited[i]) {
+        related += 1
+        visited[i] = true
+        DFS(i, flag)
+      }
+    }
+
+    return
+  }
+
+  DFS(person, flag)
+  return related
+}
+```
