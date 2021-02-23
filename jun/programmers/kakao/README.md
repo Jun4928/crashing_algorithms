@@ -430,4 +430,53 @@ return answer.map((el) => el + 1)
 
 ### 기록하고 싶은 코드
 
--
+> 구해진 수식 조합에 대해서 계산 결과를 얻어내는 로직
+
+```js
+const permutations = getPermutations([...operatorTypes], operatorTypes.size)
+
+const results = permutations.map((p) => {
+  let numbers = [...operands]
+  let ops = [...operators]
+  // 연산자들의 수선순위가 담긴 p 배열에 대해서 연산 결과를 얻어낸다.
+  for (const op of p) [numbers, ops] = execute(numbers, ops, op)
+  // 최종 연산 결과를 얻어내고
+  const [result] = numbers
+  // 절대값을 리턴해서 담아낸다.
+  return result > 0 ? result : result * -1
+})
+```
+
+> 주어진 연산자(오퍼레이터)를 가지고 수식을 계산하는 함수
+
+```js
+const execute = (operands, operators, operator) => {
+  const job = (operator, num1, num2) => {
+    const operatorMapper = {
+      '+': num1 + num2,
+      '-': num1 - num2,
+      '*': num1 * num2,
+    }
+
+    return operatorMapper[operator]
+  }
+
+  let foundOperatorIdx = operators.findIndex((op) => op === operator)
+  while (foundOperatorIdx > -1) {
+    const done = job(
+      operators[foundOperatorIdx],
+      operands[foundOperatorIdx],
+      operands[foundOperatorIdx + 1]
+    )
+
+    // 인자로 들어오는 연산자들이 담겨있는 배열과, 피연산을 당하는 숫자를 줄여나간다.
+    // splice 메소드로 직접 변형 함
+    operators.splice(foundOperatorIdx, 1)
+    operands.splice(foundOperatorIdx, 2, done)
+
+    foundOperatorIdx = operators.findIndex((op) => op === operator)
+  }
+
+  return [operands, operators]
+}
+```
