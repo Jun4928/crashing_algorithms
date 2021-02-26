@@ -480,3 +480,58 @@ const execute = (operands, operators, operator) => {
   return [operands, operators]
 }
 ```
+
+## Kakao 2018 추석 트래픽
+
+- 문자열 => 수 => 날짜를 다루는 문제
+- Date 객체를 사용해서 풀이 함
+- 핵심은 밀리 세컨즈를 어떻게 핸들링 할 것인지 결정해야 하고
+- 로그의 요청량이 변하는 구간이 어딘지를 알아내야 한다.
+
+어차피 순회 해야하는 것은 로그의 시작과 끝점이다.
+왜냐하면 요청량이 변하는 구간은 어차피 로그의 시작과 끝점이기 때문!
+
+> 끝점과 걸린 시간을 통해 요청의 시작하는 시간과 끝나는 시간을 구하는 코드
+
+```js
+const responseIntervals = lines
+  .map((l) => l.split(' '))
+  .map(([date, end, time]) => [`${date}/${end}`, time])
+  .map(([end, time]) => {
+    const startDate = new Date(end)
+    const parsedTime = time
+      .replace('s', '')
+      .split('.')
+      .map((v, idx) => {
+        if (idx === 1) return Number(v) * 10 ** Math.abs(v.length - 3)
+        return Number(v)
+      })
+
+    const [seconds, millieSeconds] = parsedTime
+
+    startDate.setMilliseconds(startDate.getMilliseconds() - millieSeconds + 1 || 1)
+    startDate.setSeconds(startDate.getSeconds() - seconds)
+    const endDate = new Date(end)
+    return [startDate.getTime(), endDate.getTime()]
+  })
+```
+
+> 시작과 끝나는 점에 대해서 1초의 마스크 안에 해당 요청이 들어가는지 확인하는 코드
+
+```js
+let max = -Infinity
+
+const logPoints = responseIntervals.flatMap((v) => v)
+logPoints.forEach((point) => {
+  const [maskS, maskE] = [point, point + 999]
+  const concurrent = responseIntervals.filter(([s, e]) => {
+    if (s >= maskS && s <= maskE) return true // mask 가 구간의 왼쪽에 걸쳐 있을 때
+    if (e >= maskS && e <= maskE) return true // mask 가 구간의 오른쪽에 걸쳐있을 때
+    if (s <= maskS && e >= maskE) return true // mask 가 구간의 사이에 있을 때
+
+    return false
+  }).length
+
+  max = Math.max(max, concurrent)
+})
+```
